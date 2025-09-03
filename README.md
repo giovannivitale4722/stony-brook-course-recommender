@@ -52,7 +52,7 @@ An intelligent course recommendation system that uses Natural Language Processin
    python3 app.py
    ```
 
-5. **Open your browser** and navigate to `http://localhost:5000`
+5. **Open your browser** and navigate to `http://localhost:5001`
 
 ## 📁 Project Structure
 
@@ -253,6 +253,3 @@ This project is open source and available under the MIT License.
 
 ---
 
-**Built with ❤️ for students exploring computer science education**
-
-*Transform your course discovery experience with the power of AI and natural language understanding!*

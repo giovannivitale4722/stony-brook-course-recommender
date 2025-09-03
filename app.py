@@ -49,9 +49,12 @@ def search_courses():
         # Search for courses
         results = recommender.search_courses(query, top_k=top_k)
         
+        # Filter out low-confidence results (below 0.05)
+        filtered_results = [course for course in results if course['similarity_score'] >= 0.05]
+        
         # Format results for frontend
         formatted_results = []
-        for course in results:
+        for course in filtered_results:
             formatted_results.append({
                 'rank': course['rank'],
                 'code': course['code'],
@@ -152,6 +155,8 @@ def get_example_queries():
         "software engineering and project management"
     ]
     return jsonify({'examples': examples})
+
+
 
 if __name__ == '__main__':
     # Initialize the recommender before starting the app
