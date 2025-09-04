@@ -334,12 +334,206 @@
                 flex-wrap: wrap;
             }
         }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+            border-bottom: 1px solid #e0e0e0;
+            background: #f8f9fa;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 1.3rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #7f8c8d;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: #e0e0e0;
+            color: #2c3e50;
+        }
+
+        .modal-body {
+            padding: 25px;
+            max-height: calc(80vh - 80px);
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .similar-course-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #fafafa;
+        }
+
+        .similar-course-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .similar-course-code {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1.1rem;
+            background: #e8f4fd;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+
+        .similar-course-title {
+            flex: 1;
+            font-weight: 500;
+            color: #34495e;
+            font-size: 1rem;
+            line-height: 1.4;
+        }
+
+        .similar-course-score {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            background: #f0f0f0;
+            padding: 5px 10px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .course-credits-small {
+            color: #2c3e50;
+            font-size: 0.9rem;
+            background: #e8f4fd;
+            padding: 5px 10px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .similar-course-meta {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .similar-course-description {
+            color: #555;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .similar-course-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn.small {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .no-similar-courses {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        /* Scrollbar styling for modal */
+        .modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-body::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        /* Mobile responsive modal */
+        @media (max-width: 768px) {
+            .modal-content {
+                max-width: 95%;
+                max-height: 90vh;
+            }
+            
+            .modal-header {
+                padding: 15px 20px;
+            }
+            
+            .modal-body {
+                padding: 20px;
+            }
+            
+            .similar-course-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .similar-course-actions {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🧠 CSE Course Recommender</h1>
+            <h1>Seawolf Course Recommender</h1>
             <p>AI-powered course discovery using natural language understanding</p>
         </div>
 
@@ -442,6 +636,10 @@
             const resultsContainer = document.getElementById('resultsContainer');
             const resultsCount = document.getElementById('resultsCount');
             
+            // Store the results for later restoration
+            lastSearchResults = data;
+            lastSearchQuery = data.query;
+            
             resultsSection.style.display = 'block';
             
             // Show results count with confidence filter info
@@ -471,13 +669,16 @@
                                 <div class="course-name">${course.title}</div>
                             </div>
                             <div class="course-meta">
-                                <div class="course-credits">${course.credits} credits</div>
+                                <div class="course-credits">${course.credits}</div>
                                 <div class="course-score">${course.similarity_score}</div>
                             </div>
                         </div>
                         <div class="course-description">${course.description}</div>
                         <div class="course-actions">
-                            <button class="action-btn" onclick="getCourseDetails('${course.code}')">View Details</button>
+                            ${course.url && course.url.trim() !== ''
+                                ? `<a class="action-btn" href="${course.url}" target="_blank" rel="noopener noreferrer">View Details</a>`
+                                : `<button class="action-btn" onclick="getCourseDetails('${course.code}')">View Details</button>`
+                            }
                             <button class="action-btn" onclick="findSimilarCourses('${course.code}')">Find Similar</button>
                         </div>
                     </div>
@@ -494,6 +695,10 @@
                 const course = await response.json();
                 
                 if (response.ok) {
+                    if (course.url && course.url.trim() !== '') {
+                        window.open(course.url, '_blank', 'noopener,noreferrer');
+                        return;
+                    }
                     alert(`Course Details for ${course.code}:\n\nTitle: ${course.title}\nCredits: ${course.credits}\nDescription: ${course.description}`);
                 } else {
                     alert('Error loading course details.');
@@ -511,24 +716,110 @@
                 const data = await response.json();
                 
                 if (response.ok) {
-                    let similarHTML = '<h3>Similar Courses:</h3>';
-                    data.similar_courses.forEach(course => {
-                        similarHTML += `
-                            <div style="margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 8px;">
-                                <strong>${course.code}: ${course.title}</strong><br>
-                                <small>Similarity: ${course.similarity_score}</small>
-                            </div>
-                        `;
-                    });
-                    
-                    // Create a modal or use alert for now
-                    alert(similarHTML.replace(/<[^>]*>/g, ''));
+                    // Display similar courses in a modal popup
+                    showSimilarCoursesModal(data, courseCode);
                 } else {
-                    alert('Error finding similar courses.');
+                    showError('Error finding similar courses.');
                 }
             } catch (error) {
                 console.error('Error finding similar courses:', error);
-                alert('Error finding similar courses.');
+                showError('Error finding similar courses.');
+            }
+        }
+
+        // Show similar courses in a modal popup
+        function showSimilarCoursesModal(data, originalCourseCode) {
+            // Prevent background scrolling
+            document.body.style.overflow = 'hidden';
+            
+            // Create modal HTML
+            let modalHTML = `
+                <div id="similarCoursesModal" class="modal-overlay">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Similar Courses for ${originalCourseCode}</h3>
+                            <button class="modal-close" onclick="closeSimilarCoursesModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+            `;
+            
+            if (data.similar_courses.length === 0) {
+                modalHTML += `
+                    <div class="no-similar-courses">
+                        <p>No similar courses found for ${originalCourseCode}.</p>
+                    </div>
+                `;
+            } else {
+                data.similar_courses.forEach(course => {
+                    modalHTML += `
+                        <div class="similar-course-item">
+                            <div class="similar-course-header">
+                                <div class="similar-course-code">${course.code}</div>
+                                <div class="similar-course-title">${course.title}</div>
+                                <div class="similar-course-meta">
+                                    <span class="course-credits-small">${course.credits}</span>
+                                    <span class="similar-course-score">Similarity: ${course.similarity_score}</span>
+                                </div>
+                            </div>
+                            <div class="similar-course-description">${course.description}</div>
+                            <div class="similar-course-actions">
+                                ${course.url && course.url.trim() !== ''
+                                    ? `<a class="action-btn small" href="${course.url}" target="_blank" rel="noopener noreferrer">View Details</a>`
+                                    : `<button class="action-btn small" onclick="getCourseDetails('${course.code}')">View Details</button>`
+                                }
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            modalHTML += `
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add modal to page
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            // Show modal
+            const modal = document.getElementById('similarCoursesModal');
+            modal.style.display = 'flex';
+            
+            // Add event listeners for closing modal
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeSimilarCoursesModal();
+                }
+            });
+            
+            // Add escape key listener
+            document.addEventListener('keydown', handleEscapeKey);
+            
+            // Prevent scroll on modal body from bubbling to background
+            const modalBody = modal.querySelector('.modal-body');
+            modalBody.addEventListener('wheel', function(e) {
+                e.stopPropagation();
+            });
+        }
+
+        // Close the similar courses modal
+        function closeSimilarCoursesModal() {
+            const modal = document.getElementById('similarCoursesModal');
+            if (modal) {
+                // Remove escape key listener
+                document.removeEventListener('keydown', handleEscapeKey);
+                modal.remove();
+                
+                // Restore background scrolling
+                document.body.style.overflow = '';
+            }
+        }
+
+        // Handle escape key for modal
+        function handleEscapeKey(e) {
+            if (e.key === 'Escape') {
+                closeSimilarCoursesModal();
             }
         }
 

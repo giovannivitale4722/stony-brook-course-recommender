@@ -27,7 +27,7 @@ class NLPCourseRecommender:
         
         logger.info("Initializing NLP Course Recommender with TF-IDF")
         
-    def load_courses(self, csv_file: str = 'cse_courses_simple.csv'):
+    def load_courses(self, csv_file: str = 'stony_brook_all_course_data.csv.csv'):
         """
         Load course data from CSV file
         
@@ -35,8 +35,46 @@ class NLPCourseRecommender:
             csv_file: Path to the CSV file containing course information
         """
         try:
-            self.courses_df = pd.read_csv(csv_file)
-            logger.info(f"Loaded {len(self.courses_df)} courses from {csv_file}")
+            raw_df = pd.read_csv(csv_file)
+            logger.info(f"Loaded {len(raw_df)} rows from {csv_file}")
+
+            # Normalize columns: expect Title, Credits, Description, URL (others may exist)
+            # Drop fully empty columns
+            df = raw_df.copy()
+            df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+
+            # Ensure required columns exist
+            required_cols = ['Title', 'Credits', 'Description', 'URL']
+            for col in required_cols:
+                if col not in df.columns:
+                    raise ValueError(f"Expected column '{col}' not found in CSV")
+
+            # Parse code and title from Title field: e.g., "ACC 210 - Financial Accounting"
+            def parse_title(value: str) -> Tuple[str, str]:
+                if not isinstance(value, str):
+                    return ("", "")
+                parts = value.split(' - ', 1)
+                if len(parts) == 2:
+                    code = parts[0].strip().replace('\xa0', ' ')
+                    title = parts[1].strip()
+                else:
+                    # Fallback: first token(s) until first space digits; keep entire as title
+                    code = value.strip().split(' ')[0]
+                    title = value.strip()
+                return (code, title)
+
+            codes_titles = df['Title'].apply(parse_title)
+            df['code'] = codes_titles.apply(lambda x: x[0])
+            df['title'] = codes_titles.apply(lambda x: x[1])
+
+            # Normalize description and credits and URL
+            df['description'] = df['Description'].fillna('').astype(str)
+            df['credits'] = df['Credits'].fillna('').astype(str)
+            df['url'] = df['URL'].fillna('').astype(str)
+
+            # Keep only needed columns in the canonical order
+            self.courses_df = df[['code', 'title', 'credits', 'description', 'url']].copy()
+            logger.info(f"Normalized to {len(self.courses_df)} courses with code/title/description/credits/url")
             
             # Clean and prepare course descriptions
             self._prepare_course_data()

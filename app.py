@@ -20,7 +20,8 @@ def initialize_recommender():
     try:
         recommender = NLPCourseRecommender()
         recommender.load_courses()
-        recommender.generate_vectors()
+        # Force regenerate to ensure vectors align with the new CSV
+        recommender.generate_vectors(force_regenerate=True)
         logger.info("Recommender initialized successfully")
         return True
     except Exception as e:
@@ -61,6 +62,7 @@ def search_courses():
                 'title': course['title'],
                 'credits': course['credits'],
                 'description': course['description'],
+                'url': course.get('url', ''),
                 'similarity_score': round(course['similarity_score'], 3)
             })
         
@@ -110,6 +112,7 @@ def get_similar_courses(course_code):
                 'title': course['title'],
                 'credits': course['credits'],
                 'description': course['description'],
+                'url': course.get('url', ''),
                 'similarity_score': round(course['similarity_score'], 3)
             })
         
